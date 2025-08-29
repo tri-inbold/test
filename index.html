@@ -203,7 +203,6 @@
                 <li><strong>Ctrl + F</strong><span>Tìm kiếm</span></li>
             </ul>
             <hr>
-            <p><strong>Lưu ý:</strong> Để tính năng "Lưu & Tải về" hoạt động, bạn nên chạy file này trên một server cục bộ (ví dụ: dùng `npx serve`)</p>
             <p><strong>Contact:</strong> tri.vu.trong@inbold.com</p>
         </div>
     </div>
@@ -213,24 +212,24 @@
             const { createFFmpeg, fetchFile } = FFmpeg;
             let ffmpeg;
 
+            // THAY ĐỔI QUAN TRỌNG: Bọc initFFmpeg trong try...catch để xử lý lỗi
             const initFFmpeg = async () => {
                 try {
                     ffmpeg = createFFmpeg({ 
-                        log: false, // Tắt bớt log cho đỡ rối console
+                        log: false,
+                        // THAY ĐỔI QUAN TRỌNG: Đảm bảo sử dụng phiên bản đơn luồng `@ffmpeg/core`
                         corePath: 'https://unpkg.com/@ffmpeg/core@0.11.0/dist/ffmpeg-core.js',
                     });
                     await ffmpeg.load();
                     console.log('FFmpeg đã sẵn sàng.');
                 } catch (error) {
-                    console.error("Lỗi nghiêm trọng khi khởi tạo FFmpeg:", error);
+                    console.error("Lỗi khởi tạo FFmpeg. Điều này thường xảy ra khi chạy file trực tiếp. Hãy thử chạy trên một server cục bộ.", error);
                     const saveBtn = document.getElementById('save-btn');
-                    saveBtn.textContent = 'Lỗi! Cần chạy trên server';
+                    saveBtn.textContent = 'Lỗi! Môi trường không hỗ trợ';
                     saveBtn.classList.add('error');
                     saveBtn.disabled = true;
-                    // Hiển thị thông báo trợ giúp
-                    const helpModal = document.getElementById('help-modal');
-                    if (helpModal) helpModal.classList.remove('hidden');
                 } finally {
+                    // Dù thành công hay thất bại, vẫn cập nhật trạng thái nút
                     updateSaveButtonAvailability(); 
                 }
             }
@@ -265,7 +264,6 @@
                 const videoLoaded = !!app.videoMain.src;
                 const ffmpegReady = ffmpeg && ffmpeg.isLoaded();
                 
-                // Không ghi đè lên trạng thái lỗi
                 if (app.saveBtn.classList.contains('error')) return;
 
                 if (!ffmpegReady) {
@@ -540,9 +538,11 @@
                     }
                     const dataStr = JSON.stringify(annotationsToSave);
 
-                    app.saveBtn.textContent = 'Đang tải video vào bộ nhớ...';
+                    app.saveBtn.textContent = 'Đang xử lý video...';
                     ffmpeg.setProgress(({ ratio }) => {
-                        app.saveBtn.textContent = `Đang xử lý: ${Math.round(ratio * 100)}%`;
+                        if (ratio >= 0 && ratio <= 1) {
+                           app.saveBtn.textContent = `Đang xử lý: ${Math.round(ratio * 100)}%`;
+                        }
                     });
                     
                     const inputFileName = 'input.mp4';
@@ -597,7 +597,6 @@
                 }
             }
             
-            // ... (Phần còn lại của file giữ nguyên)
             const togglePlayPause = () => app.videoMain.src && (app.videoMain.paused ? app.videoMain.play() : app.videoMain.pause());
             const setPlayButtonState = isPlaying => { document.getElementById('play-icon').classList.toggle('hidden', isPlaying); document.getElementById('pause-icon').classList.toggle('hidden', !isPlaying); };
             const toggleMute = () => { state.isMuted = !state.isMuted; app.videoMain.muted = state.isMuted; document.getElementById('mute-icon').classList.toggle('hidden', !state.isMuted); document.getElementById('unmute-icon').classList.toggle('hidden', state.isMuted); };
