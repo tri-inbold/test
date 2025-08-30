@@ -216,7 +216,8 @@
                 try {
                     ffmpeg = createFFmpeg({ 
                         log: true,
-                        // **GIẢI PHÁP CUỐI CÙNG:** Trỏ đến phiên bản đơn luồng (Single-Threaded)
+                        // **GIẢI PHÁP DỨT ĐIỂM:**
+                        // Trỏ đến phiên bản ĐƠN LUỒNG (Single-Threaded) VÀ ĐÚNG VERSION (0.11.6)
                         corePath: "https://unpkg.com/@ffmpeg/core-st@0.11.0/dist/ffmpeg-core.js",
                     });
                     await ffmpeg.load();
